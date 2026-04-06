@@ -25,7 +25,12 @@ end top_basys3;
 architecture top_basys3_arch of top_basys3 is
 
     -- signal declarations
-    
+    signal w_clk_slow : std_logic;
+    signal w_clk_fast : std_logic;
+    signal w_floor1 : std_logic_vector (1 downto 0);
+    signal w_floor2 : std_logic_vector (1 downto 0);
+    signal w_data : std_logic_vector(3 downto 0);
+    signal w_master_reset : std_logic;
   
 	-- component declarations
     component sevenseg_decoder is
@@ -70,14 +75,64 @@ architecture top_basys3_arch of top_basys3 is
 	
 begin
 	-- PORT MAPS ----------------------------------------
-    	
+    
+    fsm_clk_inst : clock_divider
+    generic map (k_DIV => 25000000)
+    port map (
+        i_clk => clk,
+        i_reset => btnL,
+        o_clk => w_clk_slow
+    );
+    
+    tdm_clk_inst : clock_divider
+    generic map (k_DIV => 50000)
+    port map (
+        i_clk => clk,
+        i_reset => btnL,
+        o_clk => w_clk_fast
+    );
+    
+    elev_inst_1 : elevator_controller_fsm port map (
+        i_clk => w_clk_slow,
+        i_reset => btnR,
+        is_stopped => sw(0),
+        go_up_down => sw(1),
+        o_floor => w_floor1
+    );
+    
+    elev_inst_2 : elevator_controller_fsm port map (
+        i_clk => w_clk_slow,
+        i_reset => btnR,
+        is_stopped => sw(14),
+        go_up_down => sw(15),
+        o_floor => w_floor2
+    );
+    
+    tdm_inst : TDM4 port map (
+        i_clk => w_clk_fast,
+        i_reset => w_master_reset,
+        i_D3 => "1111",
+        i_D2 => w_floor1,
+        i_D1 => "1111",
+        i_D0 => w_floor2,
+        o_data => w_data,
+        o_sel => an
+    );
+    
+    sevenseg_inst : sevenseg_decoder port map (
+        i_Hex => w_data,
+        o_seg_n => seg
+    );
+    
+    
 	
 	-- CONCURRENT STATEMENTS ----------------------------
 	
 	-- LED 15 gets the FSM slow clock signal. The rest are grounded.
-	
+	led(15) <= w_clk_slow;
 	-- leave unused switches UNCONNECTED. Ignore any warnings this causes.
-	
+	led(14 downto 0) <= (others => '0');
 	-- reset signals
+	w_master_reset <= btnU;
 	
 end top_basys3_arch;
