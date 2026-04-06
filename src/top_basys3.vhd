@@ -27,8 +27,8 @@ architecture top_basys3_arch of top_basys3 is
     -- signal declarations
     signal w_clk_slow : std_logic;
     signal w_clk_fast : std_logic;
-    signal w_floor1 : std_logic_vector (1 downto 0);
-    signal w_floor2 : std_logic_vector (1 downto 0);
+    signal w_floor1 : std_logic_vector (3 downto 0);
+    signal w_floor2 : std_logic_vector (3 downto 0);
     signal w_data : std_logic_vector(3 downto 0);
     signal w_master_reset : std_logic;
   
